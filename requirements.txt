@@ -1,0 +1,7 @@
+markdown
+numpy
+publicsuffix
+url-normalize
+urltools
+html2text
+beautifulsoup4

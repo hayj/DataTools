@@ -33,7 +33,7 @@ The method `URLParser.strToUrls(text)` extract all urls from a string:
 	>>> u.strToUrls("test1 http://test.com test2 http://test2.com")
 	['http://test.com', 'http://test2.com']
 
-See the code for more information (`URLParser.join`, `URLParser.parse`...).
+See the code for more informations (`URLParser.join`, `URLParser.parse`...).
 
 ## CSVReader
 

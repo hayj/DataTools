@@ -37,7 +37,7 @@ See the code for more informations (`URLParser.join`, `URLParser.parse`...).
 
 ## CSVReader
 
-This class is a wrapper over the csv lib, but it strip all lines (rows), handle the the first line where we find column names (the csv lib doesn't take into account the first line as the header) and yield row in dict structures.
+This class is a wrapper over the `csv` lib, but it strip all lines (rows), handle the the first line where we find column names (the csv lib doesn't take into account the first line as the header) and yield row in dict structures.
 
 	>>> from datatools.csvreader import *
 	>>> c = CSVReader("data.csv")

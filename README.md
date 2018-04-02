@@ -45,7 +45,7 @@ This class is a wrapper over the `csv` lib, but it strip all lines (rows), handl
 	...     print(row)
 	{'user_id': 1, 'name': 'a'}
 
-See the code for init params.
+Init parameters are `filePath, delimiter='\t', quotechar='|', strip=True, correctQuote=True, hasHeader=True, blankStringToNone=True`. `correctQuote` try to delete useless quotes in cells, to prevent this kind of cell: `'"a"'`.
 
 ## html2Text
 

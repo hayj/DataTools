@@ -6,7 +6,17 @@ import csv
 # TODO inherit JsonReader with openFunct etc...
 
 class CSVReader():
-    def __init__(self, filePath, delimiter='\t', quotechar='|', strip=True, correctQuote=True, hasHeader=True, blankStringToNone=True):
+    def __init__\
+    (
+        self,
+        filePath,
+        delimiter='\t',
+        quotechar='|',
+        strip=True,
+        correctQuote=True,
+        hasHeader=True,
+        blankStringToNone=True
+    ):
         """
             If your CSV file has a redaer, you can set hasHeader as True, so the iter will
             yield dicts instead of tuples
@@ -73,16 +83,22 @@ class CSVReader():
                         yield theDict
 
 
+def test1():
+    c = CSVReader("/home/hayj/Data/Misc/news-website-list/data/list.csv")
+    for row in c:
+        print(row)
+
 if __name__ == '__main__':
-    from systemtools.basics import *
-    for hasHeader in [True, False]:
-        cr = CSVReader('/home/hayj/Data/Misc/news-website-list/data/list.csv', hasHeader=hasHeader)
-        i = 0
-        for current in cr:
-            printLTS(current)
-            i += 1
-            if i == 5:
-                break
+    test1()
+#     from systemtools.basics import *
+#     for hasHeader in [True, False]:
+#         cr = CSVReader('/home/hayj/Data/Misc/news-website-list/data/list.csv', hasHeader=hasHeader)
+#         i = 0
+#         for current in cr:
+#             printLTS(current)
+#             i += 1
+#             if i == 5:
+#                 break
 
 
 

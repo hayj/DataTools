@@ -183,6 +183,8 @@ class URLParser():
 
 if __name__ == '__main__':
     urlParser = URLParser()
+    print(urlParser.normalize("amazon.com"))
+    print(urlParser.normalize("amazon.com//"))
 #     print(urlParser.getDomain("http://www.newsnow.co.uk/h/", urlLevel=URLLEVEL.SMART))
 #     print(urlParser.getDomain("https://www.github.com/test", urlLevel=URLLEVEL.SMART))
 #     print(urlParser.getDomain("https://truc.github.com/test", urlLevel=URLLEVEL.SMART))

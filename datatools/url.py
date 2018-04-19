@@ -63,6 +63,9 @@ class URLParser():
 #         return url
 
     def join(self, baseUrl, relativeUrl):
+        """
+            use http://... or https://... for baseUrl
+        """
         if relativeUrl is not None and relativeUrl.startswith("http"):
             return relativeUrl
         if baseUrl is None or len(baseUrl) < 5 or not baseUrl.startswith("http"):

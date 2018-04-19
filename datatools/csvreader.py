@@ -12,6 +12,7 @@ class CSVReader():
         filePath,
         delimiter='\t',
         quotechar='|',
+        quoting=csv.QUOTE_NONNUMERIC,
         strip=True,
         correctQuote=True,
         hasHeader=True,
@@ -28,10 +29,14 @@ class CSVReader():
         self.delimiter = delimiter
         self.correctQuote = correctQuote
         self.strip = strip
+        self.quoting = quoting
         self.quotechar = quotechar
         self.hasHeader = hasHeader
         self.blankStringToNone = blankStringToNone
-        self.reader = csv.reader(open(filePath, newline=''), delimiter=self.delimiter, quotechar=self.quotechar)
+        self.reader = csv.reader(open(filePath, newline=''),
+                                 delimiter=self.delimiter,
+                                 quotechar=self.quotechar,
+                                 quoting=self.quoting)
 
     def __iter__(self):
         if not self.hasHeader:
@@ -63,10 +68,11 @@ class CSVReader():
                         if i < len(cols):
                             currentValue = row[i]
                             currentCol = cols[i]
-                            if self.strip:
+                            if self.strip and isinstance(currentValue, str):
                                 currentValue = currentValue.strip()
                             if self.correctQuote:
-                                if len(currentValue) > 0 \
+                                if isinstance(currentValue, str) \
+                                and len(currentValue) > 0 \
                                 and currentValue[0] == '"' \
                                 and currentValue[-1] == '"':
                                     currentValue = currentValue[1:-1]

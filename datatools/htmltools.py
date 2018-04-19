@@ -1,9 +1,8 @@
-
-
-
 import re
 import html2text
 from bs4 import BeautifulSoup
+
+
 def html2Text(html):
     """
         https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python/47994071#47994071
@@ -31,7 +30,32 @@ def html2Text(html):
 
 
 
+def getSoupText(soup, cssSelector=None):
+    if cssSelector is not None:
+        soup = soup.select_one(cssSelector)
+    if soup is None:
+        return None
+    else:
+        text = soup.getText()
+        if text is None:
+            return None
+        else:
+            text = text.strip()
+            if text == "":
+                return None
+            else:
+                return text.strip()
 
+def getSoupAttr(soup, attr, cssSelector=None):
+    if cssSelector is not None:
+        soup = soup.select_one(cssSelector)
+    if soup is None:
+        return None
+    else:
+        if soup.has_attr(attr):
+            return soup[attr]
+        else:
+            return None
 
 
 if __name__ == '__main__':

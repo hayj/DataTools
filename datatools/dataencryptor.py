@@ -3,6 +3,8 @@ import json
 import time
 import glob
 from pathlib import Path
+from systemtools.location import *
+from systemtools.basics import *
 
 
 def encrypt(message, key):
@@ -43,19 +45,17 @@ class DataEncryptor:
     # key = 'mDn5S2JoGGMVw5CkfmBtNRV_dYfhLqNByesoPZhJVuQ='
     # TODO: Use this base64 encoded string as key when upgrading encryption program
 
-    def __init__(self, fileKey = None, logger = None, verbose = False):
+    def __init__(self, dataDir=None, logger=None, verbose=False):
 
         """ Note: if verbose = True, data contained in filename WILL be displayed """
 
         self.logger = logger
         self.verbose = verbose
-
-        if (fileKey):
-            self.jsonFilename = fileKey
-        self.path = str(Path.home()) + "/.ssh/encrypted-data"
-        if not os.path.isdir(self.path):
-            os.mkdir(self.path)
-        return
+        self.dataDir = dataDir
+        if self.dataDir is None:
+            self.dataDir = str(Path.home()) + "/.ssh/encrypted-data"
+        mkdir(self.dataDir)
+        self.cache = dict()
 
     def __encryptData(self, text, outputFilename):
         myMode = "encrypt"
@@ -71,30 +71,31 @@ class DataEncryptor:
         outputFile.write(translated)
         outputFile.close()
 
-    def getDict(self, filename = None):
+    def __getitem__(self, key):
+        if key not in self.cache:
+            self.cache[key] = self.getDict(key)
+        return self.cache[key]
 
+    def getDict(self, filename):
         """
+            :param:
+                filename = The file in which the json data is contained. If no filename, uses the name given in Ctor.
+            If no filename given in Ctor, throws exception
 
-        :param:
-            filename = The file in which the json data is contained. If no filename, uses the name given in Ctor.
-        If no filename given in Ctor, throws exception
+            If file has extension '.encrypted.json', will be decrypted. If not, an encrypted copy will be made.
 
-        If file has extension '.encrypted.json', will be decrypted. If not, an encrypted copy will be made.
+            :return:
+                Dictionary containing data from .json file
 
-        :return:
-            Dictionary containing data from .json file
+            :example:
+            >>>
+            accessgetter = DataEncryptor("notEncryptedFile.json")
+            dict = accessgetter.getDict() # Creates notEncryptedFile.encrypted.json
 
-        :example:
-        >>>
-        accessgetter = DataEncryptor("notEncryptedFile.json")
-        dict = accessgetter.getDict() # Creates notEncryptedFile.encrypted.json
+            dict = accessgetter.getDict(".twitter.encrypted.json")
 
-        dict = accessgetter.getDict(".twitter.encrypted.json")
-
-        Note: DataEncryptor.filename is replaced when calling getDict with a filename
-
+            Note: DataEncryptor.filename is replaced when calling getDict with a filename
         """
-
         if filename:
             self.jsonFilename = filename
             self.jsonDataDict = None
@@ -107,19 +108,19 @@ class DataEncryptor:
             return self.__getDictFromJson()
 
     def __getDictFromJson(self):
-        if not os.path.exists(self.path + '/' + self.jsonFilename + ".json") and not\
-                os.path.exists(self.path + '/' + self.jsonFilename + ".encrypted.json"):
+        if not os.path.exists(self.dataDir + '/' + self.jsonFilename + ".json") and not\
+                os.path.exists(self.dataDir + '/' + self.jsonFilename + ".encrypted.json"):
             raise RuntimeError("DataEncryptor.getDict: failed to provide valid .json file to get Dict from")
 
-        if os.path.exists(self.path + '/' + self.jsonFilename + ".json"):
-            jsonfile = open(self.path + '/' + self.jsonFilename + ".json")
+        if os.path.exists(self.dataDir + '/' + self.jsonFilename + ".json"):
+            jsonfile = open(self.dataDir + '/' + self.jsonFilename + ".json")
             self.jsonFilename = self.jsonFilename + ".json"
         else:
-            jsonfile = open(self.path + '/' + self.jsonFilename + ".encrypted.json")
+            jsonfile = open(self.dataDir + '/' + self.jsonFilename + ".encrypted.json")
             self.jsonFilename = self.jsonFilename + ".encrypted.json"
 
         if not self.jsonFilename.lower().endswith('.encrypted.json'):
-            name = os.path.splitext(self.path + '/' + self.jsonFilename)[0]
+            name = os.path.splitext(self.dataDir + '/' + self.jsonFilename)[0]
             outputFileName = name + '.encrypted.json'
             readString = jsonfile.read()
         else:
@@ -136,10 +137,10 @@ class DataEncryptor:
         return self.jsonDataDict
 
     def setPath(self, path):
-        self.path = path
+        self.dataDir = path
 
     def seekJson(self):
-        files = sorted(glob.glob(self.path + "/*"))
+        files = sorted(glob.glob(self.dataDir + "/*"))
         print(files)
         cnt = 0
         for filename in files:
@@ -178,3 +179,4 @@ class DataEncryptor:
 if __name__ == "__main__":
     de = DataEncryptor()
     de.seekJson()
+

@@ -5,3 +5,4 @@ url-normalize
 urltools
 html2text
 beautifulsoup4
+pandas

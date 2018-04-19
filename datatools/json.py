@@ -2,12 +2,14 @@ import json
 from enum import Enum
 import bz2
 import re
+from systemtools.logger import *
 from systemtools.basics import *
 from systemtools.location import enhanceDir
 
 class JsonReader():
     ROOT_TYPE = Enum('ROOT_TYPE', 'objects list')
-    def __init__(self, filePaths, readerFunct=open, skipDecodeError=True, logger=None):
+    def __init__(self, filePaths, readerFunct=open,
+                 skipDecodeError=True, logger=None, verbose=True):
         assert filePaths is not None
         if not isinstance(filePaths, list):
             filePaths = [filePaths]
@@ -15,6 +17,7 @@ class JsonReader():
         self.filePaths = filePaths
         self.skipDecodeError = skipDecodeError
         self.logger = logger
+        self.verbose = verbose
         self.readerFunct = readerFunct
         self.filePath = self.filePaths[0]
         if re.match("^.*\.bz2$", self.filePath):
@@ -36,10 +39,10 @@ class JsonReader():
             print(text)
     def loads(self, data):
         try:
-            return json.loads(data)
+            return json.loads(data, strict=False)
         except ValueError as e:
             if self.skipDecodeError:
-                self.log('Decoding this json has failed:\n' + data)
+                logException(e, self, message='Decoding this json has failed:\n' + data)
             else:
                 raise e
             return None
@@ -64,7 +67,7 @@ class JsonReader():
                                 if current is not None:
                                     yield current
 
-            
+
 def toJsonString(data):
 #     strResult = json.dumps(data, indent=4, sort_keys=True).decode('unicode-escape').encode('utf8')
     strResult = json.dumps(data, indent=4, sort_keys=True)
@@ -92,7 +95,7 @@ def dictOrListToJsonBz2(filename, data, folder="./output/", compresslevel=1):
     strResultCompressed = bz2.compress(strResult, compresslevel=compresslevel)
     with open(folder + filename + ".json.bz2", "wb") as jsonFile:
         jsonFile.write(strResultCompressed)
-        
+
 def jsonListToLineJsonBz2(filename, data, folder="./output/", compresslevel=1):
     folder = enhanceDir(folder)
     strResult = ""
@@ -107,7 +110,7 @@ def toJsonFile(filename, data, folder="./output/"):
     folder = enhanceDir(folder)
     with open(folder + filename, 'w') as f:
         json.dump(data, f, indent=4, sort_keys=True)
-    
+
 def jsonToDict(jsonText):
     if jsonText is None:
         return None
@@ -122,7 +125,7 @@ def jsonToList(filename, folder="./data/"):
 
 
 def jsonFileToObject(path):
-    with open(path) as data:    
+    with open(path) as data:
         data = jsonToObject(data)
     return data
 
@@ -134,13 +137,13 @@ def jsonToObject(text):
 def jsonTest():
     o1 = {"message": "Hello1", "data": [0, {}]}
     o2 = ["Hello1", [0, {}]]
-    
+
     print(listToStr(o1))
     print(listToStr(o2))
-    
+
     o1 = objectToJsonStr(o1)
     o2 = objectToJsonStr(o2)
-    
+
     print(listToStr(o1))
     print(listToStr(o2))
 

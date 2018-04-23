@@ -179,20 +179,8 @@ class DataEncryptor:
 
 
 if __name__ == "__main__":
-#     de = DataEncryptor()
-#     de.seekJson()
+    de = DataEncryptor()
+    de.seekJson()
 
 
-
-    text = "aaaa bbbb {} ccccccc ddddddd"
-    key = "abcd"
-
-
-    encodedText = encrypt(text, key)
-
-    print(encodedText)
-
-    decodedText = decrypt(encodedText, key)
-
-    print(decodedText)
 

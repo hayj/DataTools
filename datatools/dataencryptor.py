@@ -5,7 +5,6 @@ import glob
 from pathlib import Path
 from systemtools.location import *
 from systemtools.basics import *
-import base64
 
 
 

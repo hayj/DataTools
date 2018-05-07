@@ -3,8 +3,8 @@ import json
 import time
 import glob
 from pathlib import Path
-from systemtools.location import *
-from systemtools.basics import *
+
+from systemtools.file import *
 
 
 def encrypt(message, key):
@@ -40,18 +40,19 @@ def decrypt(cipher, key):
 class DataEncryptor:
     targetFile = None
     jsonDataDict = None
-    jsonFilename = ".projectData.json"
+    jsonFilename = None
 
-    # key = 'mDn5S2JoGGMVw5CkfmBtNRV_dYfhLqNByesoPZhJVuQ='
-    # TODO: Use this base64 encoded string as key when upgrading encryption program
+    key = 'f5j7z15j69e94xcn1glo78'
 
-    def __init__(self, dataDir=None, logger=None, verbose=False):
+    def __init__(self, dataDir=None, filename = None, logger=None, verbose=False):
 
         """ Note: if verbose = True, data contained in filename WILL be displayed """
 
         self.logger = logger
         self.verbose = verbose
         self.dataDir = dataDir
+        if filename:
+            self.jsonFilename = filename
         if self.dataDir is None:
             self.dataDir = str(Path.home()) + "/.ssh/encrypted-data"
         mkdir(self.dataDir)
@@ -59,30 +60,27 @@ class DataEncryptor:
 
     def __encryptData(self, text, outputFilename):
         myMode = "encrypt"
-        outputFile = open(outputFilename, 'w+')
 
         if (self.verbose):
             print('%sing...' % (myMode.title()))
         startTime = time.time()
-        translated = encrypt(text, 7)
+        translated = encryptFile(outputFilename, self.key, text)
         totalTime = round(time.time() - startTime, 2)
-        if (self.verbose):
+        if self.verbose:
             print('%sion time: %s secondes' % (myMode.title(), totalTime))
-        outputFile.write(translated)
-        outputFile.close()
 
     def __getitem__(self, key):
         if key not in self.cache:
             self.cache[key] = self.getDict(key)
         return self.cache[key]
 
-    def getDict(self, filename):
+    def getDict(self, filename = None):
         """
             :param:
                 filename = The file in which the json data is contained. If no filename, uses the name given in Ctor.
             If no filename given in Ctor, throws exception
 
-            If file has extension '.encrypted.json', will be decrypted. If not, an encrypted copy will be made.
+            If file has extension '.encrypted.zip', will be decrypted. If not, an encrypted copy will be made.
 
             :return:
                 Dictionary containing data from .json file
@@ -90,9 +88,9 @@ class DataEncryptor:
             :example:
             >>>
             accessgetter = DataEncryptor("notEncryptedFile.json")
-            dict = accessgetter.getDict() # Creates notEncryptedFile.encrypted.json
+            dict = accessgetter.getDict() # Creates notEncryptedFile.encrypted.zip
 
-            dict = accessgetter.getDict(".twitter.encrypted.json")
+            dict = accessgetter.getDict(".twitter.encrypted.zip")
 
             Note: DataEncryptor.filename is replaced when calling getDict with a filename
         """
@@ -109,30 +107,31 @@ class DataEncryptor:
 
     def __getDictFromJson(self):
         if not os.path.exists(self.dataDir + '/' + self.jsonFilename + ".json") and not\
-                os.path.exists(self.dataDir + '/' + self.jsonFilename + ".encrypted.json"):
+                os.path.exists(self.dataDir + '/' + self.jsonFilename + ".encrypted.zip"):
             raise RuntimeError("DataEncryptor.getDict: failed to provide valid .json file to get Dict from")
 
         if os.path.exists(self.dataDir + '/' + self.jsonFilename + ".json"):
             jsonfile = open(self.dataDir + '/' + self.jsonFilename + ".json")
             self.jsonFilename = self.jsonFilename + ".json"
         else:
-            jsonfile = open(self.dataDir + '/' + self.jsonFilename + ".encrypted.json")
-            self.jsonFilename = self.jsonFilename + ".encrypted.json"
+            jsonfile = open(self.dataDir + '/' + self.jsonFilename + ".encrypted.zip")
+            self.jsonFilename = self.jsonFilename + ".encrypted.zip"
 
-        if not self.jsonFilename.lower().endswith('.encrypted.json'):
+        if not self.jsonFilename.lower().endswith('.encrypted.zip'):
             name = os.path.splitext(self.dataDir + '/' + self.jsonFilename)[0]
-            outputFileName = name + '.encrypted.json'
+            outputFileName = name + '.encrypted.zip'
             readString = jsonfile.read()
         else:
             print("Unciphering")
             outputFileName = self.jsonFilename
-            readString = decrypt(jsonfile.read(), 7)
+            readString = decryptFile(self.jsonFilename, self.key)
 
         if (self.verbose):
             print("File " + self.jsonFilename + " contains: \n" + readString)
         jsonfile.close()
         self.jsonDataDict = json.loads(readString)
 
+        print("Final output file name")
         self.__encryptData(readString, outputFileName)
         return self.jsonDataDict
 
@@ -144,36 +143,28 @@ class DataEncryptor:
         print(files)
         cnt = 0
         for filename in files:
-            if filename.endswith(".encrypted.json"):
+            if filename.endswith(".encrypted.zip"):
                 pass
             elif filename.endswith(".json"):
                 cnt -= 1000
                 handle = open(filename, 'r')
                 text = handle.read()
                 handle.close()
-                outputname = filename.replace(".json", ".encrypted.json")
-                self.__encryptData(text, outputname)
-                os.remove(filename)
+                self.__encryptData(text, filename)
 
         if cnt == 0:
             for filename in files:
-                if filename.endswith(".encrypted.json"):
+                if filename.endswith(".encrypted.zip"):
                     print("Modifying " + filename)
                     handle = open(filename, "r")
-                    text = decrypt(handle.read(), 7)
+                    text = decryptFile(handle.name, self.key)
                     print("Text found : ", text)
                     handle.close()
-                    outputname = filename.replace(".encrypted.json", ".json")
+                    outputname = filename[:-len(".encrypted.zip")]
                     print("Outputfile : " + outputname)
                     outputhandle = open(outputname, "w+")
                     outputhandle.write(text)
                     outputhandle.close()
-
-
-# TODO: Code a better encryption/decryption system
-# TODO: Write doc/comments
-# TODO: Import datatools for Logger, replace prints with log(..., self)
-# TODO: Unit testing via template https://github.com/hayj/SystemTools/blob/master/systemtools/test/basics.py
 
 
 if __name__ == "__main__":

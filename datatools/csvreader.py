@@ -12,14 +12,14 @@ class CSVReader():
         filePath,
         delimiter='\t',
         quotechar='|',
-        quoting=csv.QUOTE_NONNUMERIC,
+#         quoting=csv.QUOTE_NONNUMERIC,
         strip=True,
         correctQuote=True,
         hasHeader=True,
         blankStringToNone=True
     ):
         """
-            If your CSV file has a redaer, you can set hasHeader as True, so the iter will
+            If your CSV file has a reader, you can set hasHeader as True, so the iter will
             yield dicts instead of tuples
             blankStringToNone will set, for each row, all "" elements to None
             strip will strip all elements
@@ -29,14 +29,15 @@ class CSVReader():
         self.delimiter = delimiter
         self.correctQuote = correctQuote
         self.strip = strip
-        self.quoting = quoting
+#         self.quoting = quoting
         self.quotechar = quotechar
         self.hasHeader = hasHeader
         self.blankStringToNone = blankStringToNone
         self.reader = csv.reader(open(filePath, newline=''),
                                  delimiter=self.delimiter,
                                  quotechar=self.quotechar,
-                                 quoting=self.quoting)
+#                                  quoting=self.quoting,
+                                 )
 
     def __iter__(self):
         if not self.hasHeader:
@@ -89,7 +90,9 @@ class CSVReader():
                         yield theDict
 
 
+from systemtools.file import *
 def test1():
+    print(fileToStr("/home/hayj/Data/Misc/news-website-list/data/list.csv"))
     c = CSVReader("/home/hayj/Data/Misc/news-website-list/data/list.csv")
     for row in c:
         print(row)

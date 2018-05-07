@@ -7,6 +7,7 @@ from pathlib import Path
 from systemtools.file import *
 
 
+
 def encrypt(message, key):
     index = 0
     count = 0
@@ -170,4 +171,6 @@ class DataEncryptor:
 if __name__ == "__main__":
     de = DataEncryptor()
     de.seekJson()
+
+
 

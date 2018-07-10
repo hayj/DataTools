@@ -97,6 +97,13 @@ class URLParser():
             return True
         return False
 
+    def isDocument(self, url):
+        parsedUrl = self.parse(url)
+        path = parsedUrl.path
+        if re.match(".*\.(pdf|doc|docx|odt)$", path):
+            return True
+        return False
+
     def initPublicSuffixList(self):
         if self.psl is not None:
             return self.psl

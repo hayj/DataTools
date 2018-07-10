@@ -1,145 +1,110 @@
 import os
 import json
-import time
-import glob
-from pathlib import Path
-
 from systemtools.file import *
 from systemtools.basics import *
 from systemtools.logger import *
+from systemtools.location import *
+from datatools.jsonreader import *
+
+from datatools import config as dtConf
 
 class DataEncryptor:
-    def __init__(self, dataDir=None, filename=None, logger=None, verbose=False):
+    def __init__\
+    (
+        self,
+        dataDir=None,
+        logger=None,
+        verbose=True,
+        encryptedExtension=".json.encrypted.zip",
+        notEncryptedExtension=".json",
+    ):
         """
-            Note: if verbose = True, data contained in filename WILL be displayed
+            This class works like an API over you ~/.ssh/encrypted-data directory
+            All files are the first key in you class instance, then you can access your encrypted data.
+            By default the class will use your ~/.ssh/id_rsa.pub to encrypt/decrypt all your data.
         """
+        # We store init data:
+        self.encryptedExtension = encryptedExtension
+        self.notEncryptedExtension = notEncryptedExtension
+        self.encryptedExtensionSecondPart = self.encryptedExtension[len(self.notEncryptedExtension):]
+        self.logger = logger
+        self.verbose = verbose
+        # We make the key:
         self.key = 'f5j7z15j69e94xcn1glo78'
         idRsaPubPath = homeDir() + "/.ssh/id_rsa.pub"
         if isFile(idRsaPubPath):
             idRsa = fileToStr(idRsaPubPath)
             self.key = idRsa + self.key
         self.key = md5(self.key)
-        self.logger = logger
-        self.verbose = verbose
+        # We find the data dir:
         self.dataDir = dataDir
-        if filename:
-            self.jsonFilename = filename
         if self.dataDir is None:
-            self.dataDir = str(Path.home()) + "/.ssh/encrypted-data"
+            self.dataDir = homeDir() + "/.ssh/encrypted-data"
         mkdir(self.dataDir)
-        self.cache = dict()
+        # Other params:
+        self.notEncryptedPattern = self.dataDir + "/*" + self.notEncryptedExtension
+        self.encryptedPattern = self.dataDir + "/*" + self.encryptedExtension
+        self.data = None
 
-    def __encryptData(self, text, outputFilename):
-        myMode = "encrypt"
-        log('%sing...' % (myMode.title()), self)
-        startTime = time.time()
-        translated = encryptFile(outputFilename, self.key, text,
-                                 logger=self.logger, verbose=self.verbose)
-        totalTime = round(time.time() - startTime, 2)
-        log('%sion time: %s secondes' % (myMode.title(), totalTime), self)
-
-    def __getitem__(self, key):
-        if key not in self.cache:
-            self.cache[key] = self.getDict(key)
-        return self.cache[key]
-
-    def getDict(self, filename=None):
+    def __getData(self, dataname):
         """
-            :param:
-                filename = The file in which the json data is contained. If no filename, uses the name given in Ctor.
-            If no filename given in Ctor, throws exception
-
-            If file has extension '.encrypted.zip', will be decrypted. If not, an encrypted copy will be made.
-
-            :return:
-                Dictionary containing data from .json file
-
-            :example:
-            >>>
-            accessgetter = DataEncryptor("notEncryptedFile.json")
-            dict = accessgetter.getDict() # Creates notEncryptedFile.encrypted.zip
-
-            dict = accessgetter.getDict(".twitter.encrypted.zip")
-
-            Note: DataEncryptor.filename is replaced when calling getDict with a filename
+            This function return the data in the file defined by  the given dataname:
+            <dataname>.json.encrypted.zip
         """
-        if filename:
-            self.jsonFilename = filename
-            self.jsonDataDict = None
-            filename = filename.lower()
-        elif not filename and not self.jsonDataDict and not self.jsonFilename:
-            raise RuntimeError("DataEncryptor.getDict: failed to provide valid .json file to get Dict from")
-        if self.jsonDataDict:
-            return self.jsonDataDict
-        else:
-            return self.__getDictFromJson()
+        encryptedFilePath = self.dataDir + "/" + dataname + self.encryptedExtension
+        notEncryptedFilePath = self.dataDir + "/" + dataname + self.notEncryptedExtension
+        if isFile(encryptedFilePath) and not isFile(notEncryptedFilePath):
+            decryptFile(encryptedFilePath, self.key, remove=False,
+                        ext=self.encryptedExtensionSecondPart,
+                        logger=self.logger, verbose=self.verbose)
+            for i in range(10):
+                if not isFile(notEncryptedFilePath):
+                    sleep(0.1)
+                    log("Waiting for " + dataname + " file decryption...")
+            data = jsonToDict(notEncryptedFilePath)
+            removeFile(notEncryptedFilePath)
+            return data
 
-    def __getDictFromJson(self):
-        filePath = self.dataDir + '/' + self.jsonFilename + ".json"
-        encryptedFilePath = filePath + ".encrypted.zip"
-        if not os.path.exists(filePath) and not os.path.exists(encryptedFilePath):
-            raise RuntimeError("DataEncryptor.getDict: failed to provide valid .json file to get Dict from")
-        isEncrypted = False
-        if os.path.exists(filePath):
-            jsonfile = open(filePath)
-            isEncrypted = False
-#             self.jsonFilename = self.jsonFilename + ".json"
-        else:
-            jsonfile = open(encryptedFilePath)
-            isEncrypted = True
-#             self.jsonFilename = self.jsonFilename + ".encrypted.zip"
+    def encryptAll(self):
+        """
+            This function encrypt *.json files in the data dir
+        """
+        for current in sortedGlob(self.notEncryptedPattern):
+            ext = self.encryptedExtensionSecondPart
+            log("Encrypting " + current + "...", self)
+            encryptFile(current, self.key,
+                        ext=self.encryptedExtensionSecondPart,
+                        remove=True,
+                        logger=self.logger, verbose=self.verbose)
 
-        if not isEncrypted:
-#             name = os.path.splitext(self.dataDir + '/' + self.jsonFilename)[0]
-#             outputFileName = name + '.encrypted.zip'
-            readString = jsonfile.read()
-        else:
-            log("Unciphering", self)
-#             outputFileName = self.jsonFilename
-            readString = decryptFile(encryptedFilePath, self.key,
-                                     logger=self.logger, verbose=self.verbose)
+    def decryptAll(self):
+        """
+            This function decrypt *.json.encrypted.zip files in the data dir
+        """
+        for current in sortedGlob(self.encryptedPattern):
+            ext = self.encryptedExtensionSecondPart
+            log("Decrypting " + current + "...", self)
+            decryptFile(current, self.key,
+                        ext=self.encryptedExtensionSecondPart,
+                        remove=True,
+                        logger=self.logger, verbose=self.verbose)
 
-        log("File " + str(self.jsonFilename) + " contains: \n" + str(readString), self)
-        jsonfile.close()
-#         print(readString)
-#         exit()
-        self.jsonDataDict = json.loads(readString)
+    def __delitem__(self, dataname):
+        if dataname in self.data:
+            del self.data[dataname]
 
-        log("Final output file name", self)
-        self.__encryptData(readString, encryptedFilePath)
-        return self.jsonDataDict
-
-    def setPath(self, path):
-        self.dataDir = path
-
-    def seekJson(self):
-        files = sorted(glob.glob(self.dataDir + "/*"))
-        log(files, self)
-        cnt = 0
-        for filename in files:
-            if filename.endswith(".encrypted.zip"):
-                pass
-            elif filename.endswith(".json"):
-                cnt -= 1000
-                handle = open(filename, 'r')
-                text = handle.read()
-                handle.close()
-                self.__encryptData(text, filename)
-
-        if cnt == 0:
-            for filename in files:
-                if filename.endswith(".encrypted.zip"):
-                    log("Modifying " + filename, self)
-                    handle = open(filename, "r")
-                    text = decryptFile(handle.name, self.key,
-                                       logger=self.logger, verbose=self.verbose)
-                    log("Text found : " + text, self)
-                    handle.close()
-                    outputname = filename[:-len(".encrypted.zip")]
-                    log("Outputfile : " + outputname, self)
-                    outputhandle = open(outputname, "w+")
-                    outputhandle.write(text)
-                    outputhandle.close()
+    def __getitem__(self, dataname):
+        """
+            The item access return the data from the file defined by the given key,
+            if the key was not yet used, this function will load the data from the file
+            and keep it definitively.
+            If you want to reload the data in the file, just use `__delitem__` and re-access the data.
+        """
+        if self.data is None:
+            self.data = dict()
+        if dataname not in self.data:
+            self.data[dataname] = self.__getData(dataname)
+        return self.data[dataname]
 
 def test1():
     de = DataEncryptor()
@@ -148,46 +113,18 @@ def test1():
         printLTS(de["mongoauth"]["datascience01"][user])
     exit()
 
+def toggleEncryption():
+    de = DataEncryptor()
+    if sortedGlob(de.notEncryptedPattern) > sortedGlob(de.encryptedPattern):
+        de.encryptAll()
+    else:
+        de.decryptAll()
+
 
 if __name__ == "__main__":
 #     test1()
-    de = DataEncryptor(verbose=False)
-    de.seekJson()
+    toggleEncryption()
 
-
-
-
-
-
-
-# def encrypt(message, key):
-#     index = 0
-#     count = 0
-#     cipher = []
-#
-#     for letter in message:
-#         cipher.append(message[index])
-#         index += int(key)
-#
-#         if index > len(message) - 1:
-#             count += 1
-#             index = count
-#     return ''.join(cipher)
-#
-#
-# def decrypt(cipher, key):
-#     message = [''] * len(cipher)
-#     index = 0
-#     count = 0
-#
-#     for letter in cipher:
-#         message[index] = letter
-#         index += int(key)
-#         if index > len(cipher) - 1:
-#             count += 1
-#             index = count
-#
-#     return ''.join(message)
 
 
 

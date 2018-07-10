@@ -111,10 +111,11 @@ def toJsonFile(filename, data, folder="./output/"):
     with open(folder + filename, 'w') as f:
         json.dump(data, f, indent=4, sort_keys=True)
 
-def jsonToDict(jsonText):
-    if jsonText is None:
-        return None
-    return json.loads(jsonText)
+def jsonToDict(filePath):
+    if isFile(filePath):
+        with open(filePath) as f:
+            return json.load(f)
+    return None
 
 def jsonToList(filename, folder="./data/"):
     folder = enhanceDir(folder)

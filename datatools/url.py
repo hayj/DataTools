@@ -42,6 +42,21 @@ class URLParser():
         # self.initPublicSuffixList()
         self.urlEnhanceRegex = re.compile('^(?:http|ftp|https)://.*')
         self.urlRegex = None
+        # self.normalizeExceptionAlreadyPrinted = False
+
+    def isNormalizable(self, *args, **kwargs):
+        return self.canBeNormalized(*args, **kwargs)
+
+    def canBeNormalized(self, url):
+        try:
+            if url is None:
+                return False
+            url = url.strip()
+            normalizedUrl = url_normalize(url)
+        except:
+            return False
+        return True
+
 
     def normalize(self, url):
         if url is None:
@@ -53,14 +68,13 @@ class URLParser():
             normalizedUrl = url_normalize(url)
             return normalizedUrl
         except Exception as e:
-            logError("Exception location: URLParser.normalize()", self)
-            logError(str(e), self)
-            logError(str(url), self)
+            # if not self.indexExceptionAlreadyPrinted:
+            logException(e, self, message=url, location="URLParser.normalize()")
             return url
 
-#         if not self.urlEnhanceRegex.match(url):
-#             url = "http://" + url
-#         return url
+        # if not self.urlEnhanceRegex.match(url):
+        #     url = "http://" + url
+        # return url
 
     def join(self, baseUrl, relativeUrl):
         """
@@ -101,6 +115,13 @@ class URLParser():
         parsedUrl = self.parse(url)
         path = parsedUrl.path
         if re.match(".*\.(pdf|doc|docx|odt)$", path):
+            return True
+        return False
+
+    def isMedia(self, url):
+        parsedUrl = self.parse(url)
+        path = parsedUrl.path
+        if re.match(".*\.(mp3|mp4|mkv|ogg|wav|avi|flac|oga)$", path):
             return True
         return False
 
@@ -193,6 +214,7 @@ class URLParser():
 
 if __name__ == '__main__':
     urlParser = URLParser()
+    print(urlParser.normalize("http://.bellinghamherald.com/news/local/article181035811.html"))
     print(urlParser.normalize("amazon.com"))
     print(urlParser.normalize("amazon.com//"))
 #     print(urlParser.getDomain("http://www.newsnow.co.uk/h/", urlLevel=URLLEVEL.SMART))

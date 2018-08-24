@@ -8,6 +8,27 @@ This project gathers useful modules on url parsing, csv reading, html parsing et
 	git clone https://github.com/hayj/DataTools.git
 	pip install ./DataTools/wm-dist/*.tar.gz
 
+## NDJson
+
+This class will allow you to read and write (append mode) objects as [Newline Delimited Json](http://jsonlines.org/) which is used to stream files (and do not load it all at once). It will automatically compress (or will not compress, according to the extension you give, or the compresslevel you give) using bz2.
+
+	from datatools.jsonutils import *
+	ndj = NDJson("mydata", "/home/foo", compresslevel=5)
+	for obj in ndj.readlines(): # Read line by line huge files to as a stream
+		print(obj)
+	for i in range(10):
+		ndj.append({"id": i}) # Append new objects (can be an iterable object or a dict)
+	print(ndj.getPath()) # Get the absolute path of the file
+	ndj.reset() # delete the file
+
+You can use the first 2 init parameters in many ways (but "bz2" or "ndjson" extensions are mandatory):
+
+	ndj = NDJson("mydata", "/home/foo")
+	ndj = NDJson("/home/foo/mydata.bz2")
+	ndj = NDJson("/home/foo/mydata.ndjson")
+	ndj = NDJson("mydata.ndjson", "/home/foo/")
+	ndj = NDJson("mydata.bz2", "/home/foo/")
+
 ## URLParser
 
 This class use [public suffix list](https://publicsuffix.org/) (which is cached and reloaded every 10 days) to find "sub-domain" and "domain" parts of an url so you can compare urls:

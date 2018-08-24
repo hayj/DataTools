@@ -21,7 +21,7 @@ This class will allow you to read and write (append mode) objects as [Newline De
 	print(ndj.getPath()) # Get the absolute path of the file
 	ndj.reset() # delete the file
 
-You can use the first 2 init parameters in many ways (but "bz2" or "ndjson" extensions are mandatory):
+You can use the first 2 init parameters in many ways (but "bz2" or "ndjson" extensions are mandatory). These parameters are `filenameOrPath` and `dirPath`:
 
 	ndj = NDJson("mydata", "/home/foo")
 	ndj = NDJson("/home/foo/mydata.bz2")

@@ -14,7 +14,7 @@ This class will allow you to read and write (append mode) objects as [Newline De
 
 	from datatools.jsonutils import *
 	ndj = NDJson("mydata", "/home/foo", compresslevel=5)
-	for obj in ndj.readlines(): # Read line by line huge files to as a stream
+	for obj in ndj.readlines(): # Read line by line huge files as a stream
 		print(obj)
 	for i in range(10):
 		ndj.append({"id": i}) # Append new objects (can be an iterable object or a dict)

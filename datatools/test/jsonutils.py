@@ -1,5 +1,5 @@
 # coding: utf-8
-# pew in systemtools-venv python ./test/basics.py
+# pew in st-venv python /home/hayj/Workspace/Python/Utils/DataTools/datatools/test/jsonutils.py
 
 import os
 import sys
@@ -11,7 +11,7 @@ from datatools import jsonutils
 from datatools.jsonutils import *
 
 # The level allow the unit test execution to choose only the top level test
-mini = 0
+mini = 3
 maxi = 9
 assert mini <= maxi
 
@@ -122,9 +122,67 @@ if mini <= 2 <= maxi:
 
                 print("\n" * 2)
 
+def moSizeTest2():
+    theTmpDir = tmpDir(subDir="MoSizeTest2")
+    f = NDJson(theTmpDir + "/test1.ndjson.bz2")
+    print(f.getEstimatedMoSize())
+
+def moSizeTest():
+    theTmpDir = tmpDir(subDir="MoSizeTest")
+    removeFiles(sortedGlob(theTmpDir + "/*.bz2"))
+    tt = TicToc()
+    tt.tic()
+    f = NDJson(theTmpDir + "/test1.ndjson.bz2", closeAtEachAppend=False)
+    while True:
+        f.append({"text": getRandomStr()})
+        if f.getEstimatedMoSize() >= 20:
+            break
+    f.close()
+    # f.reset()
+    tt.tic("first loop all optimized with estimated mo size and closeAtEachAppend")
+
+    f = NDJson(theTmpDir + "/test2.ndjson.bz2", closeAtEachAppend=True)
+    while True:
+        f.append({"text": getRandomStr()})
+        if f.getEstimatedMoSize() >= 20:
+            break
+    # f.reset()
+    tt.tic("first loop with estimated mo size and WITHOUT closeAtEachAppend optimization")
+
+    f = NDJson(theTmpDir + "/test3.ndjson.bz2", closeAtEachAppend=False)
+    while True:
+        f.append({"text": getRandomStr()})
+        if f.getMoSize() >= 20:
+            break
+    f.close()
+    # f.reset()
+    tt.tic("first loop WITHOUT estimated mo size optimization and with closeAtEachAppend ")
+
+    f = NDJson(theTmpDir + "/test4.ndjson.bz2", closeAtEachAppend=True)
+    while True:
+        f.append({"text": getRandomStr()})
+        if f.getMoSize() >= 20:
+            break
+    f.close()
+    # f.reset()
+    tt.tic("first loop WITHOUT any optimization ")
+
+    # According to this benchmark in unit test, it is not necessary to set closeAtEachAppend as False, but we have to use getEstimatedMoSize instead of getMoSize
+    # but refreshEach can be little like 1000
+
+    """
+        --> tic: 43.04s | message: first loop WITHOUT estimated mo size optimization and with closeAtEachAppend 
+        --> tic: 37.66s | message: first loop all optimized with estimated mo size and closeAtEachAppend
+        --> tic: 25.97s | message: first loop WITHOUT any optimization 
+        --> tic: 24.78s | message: first loop with estimated mo size and WITHOUT closeAtEachAppend optimization
+    """
+
+    # There is no over compression after closing the bz2 file so the getMoSize is reliable
+
 
 if __name__ == '__main__':
-    unittest.main() # Orb execute as Python unit-test in eclipse
+    moSizeTest2()
+    # unittest.main() # Orb execute as Python unit-test in eclipse
 
 
 print("Unit tests done.\n==============")

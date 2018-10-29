@@ -9,11 +9,17 @@ class NDJson:
 	"""
 		Newline Delimited Json http://jsonlines.org/
 	"""
-	def __init__(self, filenameOrPath, dirPath=None, compresslevel=9, logger=None, verbose=True):
+	def __init__(self, filenameOrPath, dirPath=None, compresslevel=9, logger=None, verbose=True, indent=None, closeAtEachAppend=True):
 		"""
 			fileNameOrPath can be a full path or fileName (with or without extension)
 			dirPath can be None or a dir path
+
+			According to a benchmark in unit test, set closeAtEachAppend as True will increase speed, but set closeAtEachAppend as False will better compress the file
+			use getEstimatedMoSize instead of getMoSize
 		"""
+		self.closeAtEachAppend = closeAtEachAppend
+		self.writeFile = None
+		self.indent = indent
 		self.logger = logger
 		self.verbose = verbose
 		self.compresslevel = compresslevel
@@ -25,10 +31,10 @@ class NDJson:
 			raise Exception("Don't use a path in bot fileNameOrPath and dirPath")
 		if "/" in filenameOrPath and not (filenameOrPath[-4:] == ".bz2" or filenameOrPath[-7:] == ".ndjson"):
 			raise Exception("Please use bz2 or ndjson extensions")
-		if "/" in filenameOrPath and not filenameOrPath.startswith("/"):
+		if "/" in filenameOrPath and not (filenameOrPath.startswith("/") or filenameOrPath.startswith("~")):
 			raise Exception("Please give an absolute path")
 		if "/" in filenameOrPath:
-			(dirPath, filename, ext, _) = decomposePath(filenameOrPath)
+			(dirPath, filename, ext, _) = decomposePath2(filenameOrPath)
 		else:
 			if dirPath is None:
 				dirPath = tmpDir()
@@ -49,6 +55,8 @@ class NDJson:
 			if self.compresslevel > 0:
 				logWarning("We will not compress " + self.path, self)
 			self.compresslevel = 0
+		self.estimatedSizeRefreshCount = 0
+		self.previousMoSize = None
 
 	def getPath(self):
 		return self.path
@@ -58,13 +66,23 @@ class NDJson:
 
 	def readlines(self):
 		if isFile(self.path):
+			self.close()
 			if self.compresslevel > 0:
 				f = bz2.open(self.path, "r")
 			else:
 				f = open(self.path, "r")
 			for line in f.readlines():
-				yield json.loads(line)
+				content = None
+				try:
+					content = json.loads(line)
+				except TypeError as e:
+					content = json.loads(line.decode('utf-8'))
+				if content is not None:
+					yield content 
 			f.close()
+
+	def __iter__(self):
+		return self.readlines()
 
 	def write(self, *args, **kwargs):
 		return self.append(*args, **kwargs)
@@ -79,10 +97,11 @@ class NDJson:
 		    items = iter(items)
 		except:
 		    items = [items]
-		if self.compresslevel > 0:
-			f = bz2.open(self.path, "at", compresslevel=self.compresslevel)
-		else:
-			f = open(self.path, "a")
+		if self.writeFile is None:
+			if self.compresslevel > 0:
+				self.writeFile = bz2.open(self.path, "at", compresslevel=self.compresslevel)
+			else:
+				self.writeFile = open(self.path, "a")
 			# print("a" * 100)
 		# if self.compresslevel > 0:
 		# 	def jsonYielder(items):
@@ -91,12 +110,34 @@ class NDJson:
 		# 	f.writelines(jsonYielder(items))
 		# else:
 		for o in items:
-			f.write(str(json.dumps(o)) + "\n")
-		f.close()
+			self.writeFile.write(str(json.dumps(o, indent=self.indent)) + "\n")
+		if self.closeAtEachAppend:
+			self.close()
 
+	def close(self):
+		if self.writeFile is not None:
+			self.writeFile.close()
+			self.writeFile = None
 
+	def getSize(self):
+		try:
+			return os.path.getsize(self.path)
+		except FileNotFoundError as e:
+			return 0.0
+		except Exception as e:
+			logException(e, self)
+			return 0.0
 
+	def getMoSize(self):
+		return self.getSize() / (1000 * 1000)
 
+	def getEstimatedMoSize(self, refreshEach=1000):
+		if self.previousMoSize is None or \
+			self.estimatedSizeRefreshCount == 0 or \
+			self.estimatedSizeRefreshCount % refreshEach == 0:
+			self.previousMoSize = self.getMoSize()
+		self.estimatedSizeRefreshCount += 1
+		return self.previousMoSize
 
 if __name__ == '__main__':
 	print(list(NDJson(tmpDir() + "/a9.bz2").readlines()))

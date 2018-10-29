@@ -1,5 +1,7 @@
 import re
 import html2text
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 from bs4 import BeautifulSoup
 
 

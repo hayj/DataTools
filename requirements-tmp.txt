@@ -1,4 +1,5 @@
-pandas
-seaborn
-matplotlib
-numpy
+nltk
+langdetect
+unidecode
+guess_language-spirit
+pyenchant

@@ -122,6 +122,12 @@ if min <= 1 <= max:
             print(url)
             self.assertTrue(url == "http://www.cnn.co.uk/test?B=2&t=1")
 
+
+if min <= 2 <= max:
+    class Test2(unittest.TestCase):
+        def test1(self):
+            pass
+
 if __name__ == '__main__':
     unittest.main() # Or execute as Python unit-test in eclipse
 

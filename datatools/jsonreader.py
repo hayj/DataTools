@@ -111,10 +111,12 @@ def toJsonFile(filename, data, folder="./output/"):
     with open(folder + filename, 'w') as f:
         json.dump(data, f, indent=4, sort_keys=True)
 
-def jsonToDict(filePath):
+def jsonToDict(filePath, logger=None, verbose=True):
     if isFile(filePath):
         with open(filePath) as f:
             return json.load(f)
+    else:
+        logError(str(filePath) + " not found.", logger=logger, verbose=verbose)
     return None
 
 def jsonToList(filename, folder="./data/"):

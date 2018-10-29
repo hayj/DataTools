@@ -12,11 +12,13 @@ class CSVReader():
         filePath,
         delimiter='\t',
         quotechar='|',
-#         quoting=csv.QUOTE_NONNUMERIC,
+        quoting=None, # csv.QUOTE_NONNUMERIC, csv.QUOTE_NONE, csv.QUOTE_MINIMAL, csv.QUOTE_ALL
         strip=True,
         correctQuote=True,
+        doublequote=True,
         hasHeader=True,
-        blankStringToNone=True
+        blankStringToNone=True,
+        encoding=None, # cp1252, utf-8, ISO-8859-14
     ):
         """
             If your CSV file has a reader, you can set hasHeader as True, so the iter will
@@ -25,18 +27,25 @@ class CSVReader():
             strip will strip all elements
             correctQuote will remove quote at the begining and the end of each element if exists
         """
+        self.doublequote = doublequote
+        self.quoting = quoting
         self.filePath = filePath
         self.delimiter = delimiter
         self.correctQuote = correctQuote
         self.strip = strip
-#         self.quoting = quoting
+        self.encoding = encoding
         self.quotechar = quotechar
         self.hasHeader = hasHeader
         self.blankStringToNone = blankStringToNone
-        self.reader = csv.reader(open(filePath, newline=''),
+        if self.quoting is None:
+            quotingKwargs = {}
+        else:
+            quotingKwargs = {"quoting": self.quoting}
+        self.reader = csv.reader(open(filePath, newline='', encoding=self.encoding), # encoding=''
                                  delimiter=self.delimiter,
                                  quotechar=self.quotechar,
-#                                  quoting=self.quoting,
+                                 doublequote=self.doublequote,
+                                 **quotingKwargs
                                  )
 
     def __iter__(self):

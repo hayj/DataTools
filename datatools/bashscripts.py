@@ -47,4 +47,3 @@ class BashScripts:
         except Exception as e:
             logException(e, self, location="downloadScript")
             return None
-

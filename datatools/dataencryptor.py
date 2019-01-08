@@ -19,6 +19,11 @@ def getDataEncryptorSingleton(*args, **kwargs):
     return dataEncryptorSingleton
 
 class DataEncryptor:
+    """
+        This class works like an API over your ~/.ssh/encrypted-data directory
+        All files are the first key in you class instance, then you can access your encrypted data.
+        By default the class will use your ~/.ssh/id_rsa.pub to encrypt/decrypt all your data.
+    """
     def __init__\
     (
         self,
@@ -28,11 +33,6 @@ class DataEncryptor:
         encryptedExtension=".json.encrypted.zip",
         notEncryptedExtension=".json",
     ):
-        """
-            This class works like an API over you ~/.ssh/encrypted-data directory
-            All files are the first key in you class instance, then you can access your encrypted data.
-            By default the class will use your ~/.ssh/id_rsa.pub to encrypt/decrypt all your data.
-        """
         self.lock = Lock()
         # We store init data:
         self.encryptedExtension = encryptedExtension

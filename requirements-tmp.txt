@@ -1,5 +1,0 @@
-nltk
-langdetect
-unidecode
-guess_language-spirit
-pyenchant

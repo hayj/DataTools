@@ -41,8 +41,8 @@ class DataEncryptor:
         self.logger = logger
         self.verbose = verbose
         # We make the key:
-        self.key = 'f5j7z15j69e94xcn1glo78'
-        idRsaPubPath = homeDir() + "/.ssh/id_rsa.pub"
+        self.key = 'f5j7z15j69e94xcn1glo789'
+        idRsaPubPath = homeDir() + "/.ssh/id_rsa"
         if isFile(idRsaPubPath):
             idRsa = fileToStr(idRsaPubPath)
             self.key = idRsa + self.key
@@ -79,7 +79,7 @@ class DataEncryptor:
                         sleep(0.1)
                         log("Waiting for " + dataname + " file decryption...")
                 data = jsonToDict(notEncryptedFilePath)
-                removeFile(notEncryptedFilePath)
+                remove(notEncryptedFilePath)
                 return data
 
     def encryptAll(self):
@@ -132,6 +132,10 @@ def test1():
     for user in ["hayj", "student"]:
         printLTS(de["mongoauth"]["datascience01"][user])
     exit()
+    
+def test2():
+    de = DataEncryptor()
+    printLTS(de["twitterkeys"])
 
 def toggleEncryption():
     de = DataEncryptor()
@@ -142,7 +146,8 @@ def toggleEncryption():
 
 
 if __name__ == "__main__":
-#     test1()
+    # test1()
+    # test2()
     toggleEncryption()
 
 

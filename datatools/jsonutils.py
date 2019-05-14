@@ -5,6 +5,12 @@ from systemtools.location import *
 from systemtools.duration import *
 from systemtools.file import *
 
+def toJsonFile(data, path):
+    if "/" not in path and "/" in data:
+        data, path = path, data
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=4, sort_keys=True)
+
 class NDJson:
 	"""
 		Newline Delimited Json http://jsonlines.org/

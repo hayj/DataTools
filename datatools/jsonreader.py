@@ -106,10 +106,9 @@ def jsonListToLineJsonBz2(filename, data, folder="./output/", compresslevel=1):
     with open(folder + filename + ".json.bz2", "wb") as jsonFile:
         jsonFile.write(strResultCompressed)
 
-def toJsonFile(filename, data, folder="./output/"):
-    folder = enhanceDir(folder)
-    with open(folder + filename, 'w') as f:
-        json.dump(data, f, indent=4, sort_keys=True)
+
+
+
 
 def jsonToDict(filePath, logger=None, verbose=True):
     if isFile(filePath):

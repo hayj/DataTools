@@ -29,6 +29,7 @@ class NDJson:
 		self.logger = logger
 		self.verbose = verbose
 		self.compresslevel = compresslevel
+		self.alreadyWarnedAboutMoSize = False
 		if self.compresslevel is None:
 			self.compresslevel = 0
 		if filenameOrPath is None:
@@ -137,7 +138,10 @@ class NDJson:
 	def getMoSize(self):
 		return self.getSize() / (1000 * 1000)
 
-	def getEstimatedMoSize(self, refreshEach=1000):
+	def getEstimatedMoSize(self, refreshEach=100):
+		if self.closeAtEachAppend and not self.alreadyWarnedAboutMoSize:
+			logWarning("WARNING You use closeAtEachAppend, it can result to a wrong getEstimatedMoSize...", self)
+			self.alreadyWarnedAboutMoSize = True
 		if self.previousMoSize is None or \
 			self.estimatedSizeRefreshCount == 0 or \
 			self.estimatedSizeRefreshCount % refreshEach == 0:
@@ -146,8 +150,14 @@ class NDJson:
 		return self.previousMoSize
 
 if __name__ == '__main__':
-	print(list(NDJson(tmpDir() + "/a9.bz2").readlines()))
+	path = sortedGlob("/home/hayj/tmp/mbti-datasets/mbti-dataset-2019.05.15-19.14/0*")[0]
+	f = NDJson(path)
+	print(f.getEstimatedMoSize())
+	# print(list(NDJson(tmpDir() + "/a9.bz2").readlines()))
 	
+
+
+
 
 
 

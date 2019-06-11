@@ -22,6 +22,9 @@ def fromJsonFile(filePath, logger=None, verbose=True):
 class NDJson:
 	"""
 		Newline Delimited Json http://jsonlines.org/
+
+		a basic dataset of 3.9 Go (with extra data in) will take 74 Go of RAM
+		so *19
 	"""
 	def __init__(self, filenameOrPath, dirPath=None, compresslevel=9, logger=None, verbose=True, indent=None, closeAtEachAppend=True):
 		"""

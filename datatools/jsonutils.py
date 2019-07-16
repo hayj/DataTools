@@ -83,21 +83,24 @@ class NDJson:
 		removeFile(self.path)
 
 	def readlines(self):
-		if isFile(self.path):
-			self.close()
-			if self.compresslevel > 0:
-				f = bz2.open(self.path, "r")
-			else:
-				f = open(self.path, "r")
-			for line in f.readlines():
-				content = None
-				try:
-					content = json.loads(line)
-				except TypeError as e:
-					content = json.loads(line.decode('utf-8'))
-				if content is not None:
-					yield content 
-			f.close()
+		try:
+			if isFile(self.path):
+				self.close()
+				if self.compresslevel > 0:
+					f = bz2.open(self.path, "r")
+				else:
+					f = open(self.path, "r")
+				for line in f.readlines():
+					content = None
+					try:
+						content = json.loads(line)
+					except TypeError as e:
+						content = json.loads(line.decode('utf-8'))
+					if content is not None:
+						yield content
+				f.close()
+		except Exception as e:
+			logException(e, self, message=str(self.path))
 
 	def __iter__(self):
 		return self.readlines()

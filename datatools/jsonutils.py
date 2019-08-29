@@ -3,7 +3,7 @@ import bz2
 from systemtools.basics import *
 from systemtools.location import *
 from systemtools.duration import *
-from systemtools.file import *
+from systemtools.file import * 
 
 def toJsonFile(data, path):
     if "/" not in path and "/" in data:

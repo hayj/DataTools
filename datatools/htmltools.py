@@ -3,32 +3,37 @@ import html2text
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 from bs4 import BeautifulSoup
+from systemtools.logger import logException
 
 
-def html2Text(html):
+def html2Text(html, logger=None, verbose=True):
     """
         https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python/47994071#47994071
     """
-    def removeMarkdown(text):
-        for current in ["^[ #*]{2,30}", "^[ ]{0,30}\d\\\.", "^[ ]{0,30}\d\."]:
-            markdown = re.compile(current, flags=re.MULTILINE)
-            text = markdown.sub(" ", text)
+    try:
+        def removeMarkdown(text):
+            for current in ["^[ #*]{2,30}", "^[ ]{0,30}\d\\\.", "^[ ]{0,30}\d\."]:
+                markdown = re.compile(current, flags=re.MULTILINE)
+                text = markdown.sub(" ", text)
+            return text
+        def removeAngular(text):
+            angular = re.compile("[{][|].{2,40}[|][}]|[{][*].{2,40}[*][}]|[{][{].{2,40}[}][}]|\[\[.{2,40}\]\]")
+            text = angular.sub(" ", text)
+            return text
+        h = html2text.HTML2Text()
+        h.images_to_alt = True
+        h.ignore_links = True
+        h.ignore_emphasis = False
+        h.skip_internal_links = True
+        text = h.handle(html)
+        soup = BeautifulSoup(text, "html.parser")
+        text = soup.text
+        text = removeAngular(text)
+        text = removeMarkdown(text)
         return text
-    def removeAngular(text):
-        angular = re.compile("[{][|].{2,40}[|][}]|[{][*].{2,40}[*][}]|[{][{].{2,40}[}][}]|\[\[.{2,40}\]\]")
-        text = angular.sub(" ", text)
-        return text
-    h = html2text.HTML2Text()
-    h.images_to_alt = True
-    h.ignore_links = True
-    h.ignore_emphasis = False
-    h.skip_internal_links = True
-    text = h.handle(html)
-    soup = BeautifulSoup(text, "html.parser")
-    text = soup.text
-    text = removeAngular(text)
-    text = removeMarkdown(text)
-    return text
+    except Exception as e:
+        logException(e, logger=logger, location="html2Text", verbose=verbose)
+        return html
 
 
 

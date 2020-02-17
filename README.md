@@ -13,21 +13,12 @@ This project gathers useful modules on url parsing, csv reading, html parsing et
 This class will allow you to read and write (append mode) objects as [Newline Delimited Json](http://jsonlines.org/) which is used to stream files (and do not load it all at once). It will automatically compress (or will not compress, according to the extension you give, or the compresslevel you give) using bz2.
 
 	from datatools.jsonutils import *
-	ndj = NDJson("mydata", "/home/foo", compresslevel=5)
-	for obj in ndj.readlines(): # Read line by line huge files as a stream
-		print(obj)
+	ndj = NDJson("/home/foo/mydata.ndjson.bz2")
+	for currentDict in ndj: # Read line by line huge files as a stream
+		print(currentDict)
 	for i in range(10):
 		ndj.append({"id": i}) # Append new objects (can be an iterable object or a dict)
-	print(ndj.getPath()) # Get the absolute path of the file
 	ndj.reset() # delete the file
-
-You can use the first 2 init parameters in many ways (but "bz2" or "ndjson" extensions are mandatory). These parameters are `filenameOrPath` and `dirPath`:
-
-	ndj = NDJson("mydata", "/home/foo")
-	ndj = NDJson("/home/foo/mydata.bz2")
-	ndj = NDJson("/home/foo/mydata.ndjson")
-	ndj = NDJson("mydata.ndjson", "/home/foo/")
-	ndj = NDJson("mydata.bz2", "/home/foo/")
 
 ## URLParser
 
